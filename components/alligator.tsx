@@ -37,7 +37,6 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
       walkAction.reset().fadeIn(0.5).play();
       walkAction.timeScale = 0.8;
     }
-    console.log("[v0] Available alligator animations:", Object.keys(actions));
   }, [actions]);
 
   useFrame(() => {

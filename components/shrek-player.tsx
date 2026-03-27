@@ -105,9 +105,10 @@ export function ShrekPlayer() {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      <primitive object={scene} scale={1.5} />
+      {/* Fixed scale to prevent squishing - uniform scale on all axes */}
+      <primitive object={scene} scale={[1.5, 1.5, 1.5]} rotation={[0, Math.PI, 0]} />
       {/* Point light following Shrek for visibility */}
-      <pointLight intensity={2} distance={8} color="#556b2f" position={[0, 3, 0]} />
+      <pointLight intensity={3} distance={12} color="#7a9f5a" position={[0, 3, 0]} />
     </group>
   );
 }
