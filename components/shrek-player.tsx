@@ -41,6 +41,7 @@ export function ShrekPlayer() {
       keysPressed.current.add(e.key.toLowerCase());
       if (e.key === " ") {
         e.preventDefault();
+        console.log("[v0] Spacebar pressed - setting isRevealing to true");
         setIsRevealing(true);
       }
     };
@@ -48,6 +49,7 @@ export function ShrekPlayer() {
     const handleKeyUp = (e: KeyboardEvent) => {
       keysPressed.current.delete(e.key.toLowerCase());
       if (e.key === " ") {
+        console.log("[v0] Spacebar released - setting isRevealing to false");
         setIsRevealing(false);
       }
     };

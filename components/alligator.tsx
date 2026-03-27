@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useMemo } from "react";
+import { useRef, useEffect, useMemo, useState } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
@@ -17,16 +17,18 @@ interface AlligatorProps {
 export function Alligator({ initialPosition, index }: AlligatorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/alligator.glb");
+  const [currentOpacity, setCurrentOpacity] = useState(0);
+  
   const clonedScene = useMemo(() => {
     const clone = scene.clone();
-    // Make sure all materials are set up for transparency
     clone.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
-        // Clone material to avoid sharing between instances
         child.material = (child.material as THREE.Material).clone();
         const mat = child.material as THREE.MeshStandardMaterial;
         mat.transparent = true;
         mat.opacity = 0;
+        mat.side = THREE.DoubleSide;
+        mat.depthWrite = false;
         mat.needsUpdate = true;
       }
     });
@@ -45,7 +47,6 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   } = useGameStore();
 
   useEffect(() => {
-    // Play walk animation
     const walkAction = actions["Walk"] || actions["walk"] || Object.values(actions)[0];
     if (walkAction) {
       walkAction.play();
@@ -54,14 +55,36 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   }, [actions]);
 
   useFrame(() => {
-    if (!groupRef.current || gameOver) return;
+    if (!groupRef.current) return;
+
+    // VISIBILITY: Visible when spacebar pressed OR when game over
+    const shouldBeVisible = isRevealing || gameOver;
+    const targetOpacity = shouldBeVisible ? 1 : 0;
+    const newOpacity = THREE.MathUtils.lerp(currentOpacity, targetOpacity, 0.1);
+    
+    if (index === 0) {
+      console.log("[v0] Alligator 0 - isRevealing:", isRevealing, "gameOver:", gameOver, "targetOpacity:", targetOpacity, "currentOpacity:", newOpacity.toFixed(2));
+    }
+    
+    setCurrentOpacity(newOpacity);
+    
+    // Update material opacity
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = child.material as THREE.MeshStandardMaterial;
+        mat.opacity = newOpacity;
+        mat.depthWrite = newOpacity > 0.5;
+        mat.visible = newOpacity > 0.01;
+      }
+    });
+
+    if (gameOver) return;
 
     // Slowly follow the player
     const direction = new THREE.Vector3()
       .subVectors(playerPosition, groupRef.current.position)
       .normalize();
     
-    // Move towards player
     groupRef.current.position.add(direction.multiplyScalar(ALLIGATOR_SPEED));
     
     // Face the player
@@ -81,29 +104,28 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
     if (distance < CATCH_DISTANCE) {
       setGameOver(true);
     }
-
-    // VISIBILITY: Visible when spacebar pressed OR when game over (caught)
-    const targetOpacity = (isRevealing || gameOver) ? 1 : 0;
-    
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material) {
-        const mat = child.material as THREE.MeshStandardMaterial;
-        mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.15);
-      }
-    });
   });
+
+  // Always render with a visible placeholder when revealing
+  const showGlow = isRevealing || gameOver;
 
   return (
     <group ref={groupRef} position={initialPosition.toArray()}>
       <primitive object={clonedScene} scale={2} />
-      {/* Add a subtle glow when revealed or game over */}
-      {(isRevealing || gameOver) && (
-        <pointLight 
-          intensity={1} 
-          distance={5} 
-          color="#ff4444" 
-          position={[0, 1, 0]} 
-        />
+      {/* Debug sphere to see position - visible when revealing */}
+      {showGlow && (
+        <>
+          <mesh position={[0, 1, 0]}>
+            <sphereGeometry args={[0.5, 16, 16]} />
+            <meshStandardMaterial color="#ff0000" emissive="#ff0000" emissiveIntensity={0.5} />
+          </mesh>
+          <pointLight 
+            intensity={2} 
+            distance={8} 
+            color="#ff4444" 
+            position={[0, 2, 0]} 
+          />
+        </>
       )}
     </group>
   );
