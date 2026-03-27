@@ -31,12 +31,13 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   } = useGameStore();
 
   useEffect(() => {
-    // Play walk animation
-    const walkAction = actions["Walk"] || actions["walk"] || Object.values(actions)[0];
+    // Play walk animation - check various possible animation names
+    const walkAction = actions["Walking"] || actions["walking"] || actions["Walk"] || actions["walk"] || Object.values(actions)[0];
     if (walkAction) {
-      walkAction.play();
-      walkAction.timeScale = 0.5;
+      walkAction.reset().fadeIn(0.5).play();
+      walkAction.timeScale = 0.8;
     }
+    console.log("[v0] Available alligator animations:", Object.keys(actions));
   }, [actions]);
 
   useFrame(() => {
