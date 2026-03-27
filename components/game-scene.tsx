@@ -88,7 +88,7 @@ function Lights() {
 }
 
 function Alligators() {
-  const { gameOver, gameStarted } = useGameStore();
+  const { gameStarted } = useGameStore();
   
   const initialPositions = [
     new THREE.Vector3(15, 0, 10),
@@ -98,7 +98,8 @@ function Alligators() {
     new THREE.Vector3(20, 0, 0),
   ];
 
-  if (gameOver || !gameStarted) return null;
+  // Don't unmount on gameOver - keep alligators visible
+  if (!gameStarted) return null;
 
   return (
     <>

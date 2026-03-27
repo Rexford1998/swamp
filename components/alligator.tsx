@@ -121,11 +121,10 @@ function AlligatorBody({ opacity }: { opacity: number }) {
 export function Alligator({ initialPosition, index }: AlligatorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const opacityRef = useRef(0);
+  const positionRef = useRef(initialPosition.clone()); // Track position locally
   
   const { 
     playerPosition, 
-    alligatorPositions, 
-    setAlligatorPositions,
     gameOver,
     setGameOver,
     isRevealing,
@@ -140,28 +139,27 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
 
     if (gameOver) return;
 
-    // Slowly follow the player
+    // Slowly follow the player using LOCAL position tracking
+    const currentPos = positionRef.current;
     const direction = new THREE.Vector3()
-      .subVectors(playerPosition, groupRef.current.position)
+      .subVectors(playerPosition, currentPos)
       .normalize();
     
-    // Move towards player
-    groupRef.current.position.add(direction.multiplyScalar(ALLIGATOR_SPEED));
+    // Move towards player - update local position ref
+    currentPos.add(direction.multiplyScalar(ALLIGATOR_SPEED));
+    
+    // Apply position to group
+    groupRef.current.position.copy(currentPos);
     
     // Face the player
     const angle = Math.atan2(
-      playerPosition.x - groupRef.current.position.x,
-      playerPosition.z - groupRef.current.position.z
+      playerPosition.x - currentPos.x,
+      playerPosition.z - currentPos.z
     );
     groupRef.current.rotation.y = angle;
 
-    // Update position in store
-    const newPositions = [...alligatorPositions];
-    newPositions[index] = groupRef.current.position.clone();
-    setAlligatorPositions(newPositions);
-
     // Check collision - only on XZ plane (ignore Y height differences)
-    const alligatorPos2D = new THREE.Vector2(groupRef.current.position.x, groupRef.current.position.z);
+    const alligatorPos2D = new THREE.Vector2(currentPos.x, currentPos.z);
     const playerPos2D = new THREE.Vector2(playerPosition.x, playerPosition.z);
     const distance = alligatorPos2D.distanceTo(playerPos2D);
     
