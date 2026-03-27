@@ -6,7 +6,7 @@ import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameStore } from "@/lib/game-store";
 
-const ALLIGATOR_SPEED = 0.015;
+const ALLIGATOR_SPEED = 0.012;
 const CATCH_DISTANCE = 2;
 
 interface AlligatorProps {
@@ -22,13 +22,23 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   
   const { 
     playerPosition, 
-    isMoving, 
     isRevealing,
     alligatorPositions,
     setAlligatorPositions,
     setGameOver,
     gameOver
   } = useGameStore();
+
+  // Initialize materials as transparent and invisible
+  useEffect(() => {
+    clonedScene.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        const mat = child.material as THREE.MeshStandardMaterial;
+        mat.transparent = true;
+        mat.opacity = 0;
+      }
+    });
+  }, [clonedScene]);
 
   useEffect(() => {
     // Play walk animation
@@ -68,21 +78,14 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
       setGameOver(true);
     }
 
-    // Set visibility based on reveal state (space held AND not moving)
-    const shouldBeVisible = isRevealing && !isMoving;
+    // VISIBILITY: Only visible when spacebar is pressed (isRevealing is true)
+    // Fade in/out based on reveal state
+    const targetOpacity = isRevealing ? 1 : 0;
     
-    // Fade effect for visibility
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         const mat = child.material as THREE.MeshStandardMaterial;
-        if (!mat.transparent) {
-          mat.transparent = true;
-        }
-        mat.opacity = THREE.MathUtils.lerp(
-          mat.opacity,
-          shouldBeVisible ? 1 : 0,
-          0.1
-        );
+        mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, 0.15);
       }
     });
   });

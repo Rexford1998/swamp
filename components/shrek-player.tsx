@@ -20,7 +20,9 @@ export function ShrekPlayer() {
     setPlayerRotation, 
     setIsMoving, 
     setIsRevealing,
-    gameOver 
+    isRevealing,
+    gameOver,
+    gameStarted
   } = useGameStore();
 
   useEffect(() => {
@@ -32,9 +34,12 @@ export function ShrekPlayer() {
   }, [actions]);
 
   useEffect(() => {
+    if (!gameStarted) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       keysPressed.current.add(e.key.toLowerCase());
       if (e.key === " ") {
+        e.preventDefault();
         setIsRevealing(true);
       }
     };
@@ -53,7 +58,7 @@ export function ShrekPlayer() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [setIsRevealing]);
+  }, [setIsRevealing, gameStarted]);
 
   useFrame(() => {
     if (!groupRef.current || gameOver) return;
@@ -61,8 +66,8 @@ export function ShrekPlayer() {
     const keys = keysPressed.current;
     let isCurrentlyMoving = false;
     
-    // Don't move if revealing (holding space)
-    const isHoldingSpace = keys.has(" ");
+    // IMPORTANT: Cannot move AT ALL while holding space (revealing)
+    const isHoldingSpace = keys.has(" ") || isRevealing;
     
     if (!isHoldingSpace) {
       // Rotation
@@ -106,8 +111,8 @@ export function ShrekPlayer() {
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
       <primitive object={scene} scale={1.5} />
-      {/* Point light following Shrek for visibility */}
-      <pointLight intensity={2} distance={8} color="#556b2f" position={[0, 3, 0]} />
+      {/* Very dim light following Shrek - just enough to see where you are */}
+      <pointLight intensity={0.5} distance={6} color="#3a5a3a" position={[0, 3, 0]} />
     </group>
   );
 }
