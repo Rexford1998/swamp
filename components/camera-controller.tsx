@@ -13,14 +13,14 @@ export function CameraController() {
   const { playerPosition, playerRotation } = useGameStore();
 
   useFrame(() => {
-    // Calculate camera position behind player
+    // Calculate camera position behind player (player faces -Z, camera behind at +Z)
     const offsetX = Math.sin(playerRotation) * CAMERA_DISTANCE;
     const offsetZ = Math.cos(playerRotation) * CAMERA_DISTANCE;
     
     const targetPosition = new THREE.Vector3(
-      playerPosition.x - offsetX,
+      playerPosition.x + offsetX,
       CAMERA_HEIGHT,
-      playerPosition.z - offsetZ
+      playerPosition.z + offsetZ
     );
 
     // Smoothly lerp camera position

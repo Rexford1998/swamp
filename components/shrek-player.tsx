@@ -41,7 +41,6 @@ export function ShrekPlayer() {
       keysPressed.current.add(e.key.toLowerCase());
       if (e.key === " ") {
         e.preventDefault();
-        console.log("[v0] Spacebar pressed - setting isRevealing to true");
         setIsRevealing(true);
       }
     };
@@ -49,7 +48,6 @@ export function ShrekPlayer() {
     const handleKeyUp = (e: KeyboardEvent) => {
       keysPressed.current.delete(e.key.toLowerCase());
       if (e.key === " ") {
-        console.log("[v0] Spacebar released - setting isRevealing to false");
         setIsRevealing(false);
       }
     };
@@ -73,23 +71,23 @@ export function ShrekPlayer() {
     const isHoldingSpace = keys.has(" ") || isRevealing;
     
     if (!isHoldingSpace) {
-      // Rotation
+      // Rotation - left turns left, right turns right
       if (keys.has("a") || keys.has("arrowleft")) {
-        groupRef.current.rotation.y += ROTATION_SPEED;
-      }
-      if (keys.has("d") || keys.has("arrowright")) {
         groupRef.current.rotation.y -= ROTATION_SPEED;
       }
+      if (keys.has("d") || keys.has("arrowright")) {
+        groupRef.current.rotation.y += ROTATION_SPEED;
+      }
 
-      // Movement
+      // Movement - forward is negative Z in Three.js
       if (keys.has("w") || keys.has("arrowup")) {
-        const direction = new THREE.Vector3(0, 0, 1);
+        const direction = new THREE.Vector3(0, 0, -1);
         direction.applyQuaternion(groupRef.current.quaternion);
         groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED));
         isCurrentlyMoving = true;
       }
       if (keys.has("s") || keys.has("arrowdown")) {
-        const direction = new THREE.Vector3(0, 0, -1);
+        const direction = new THREE.Vector3(0, 0, 1);
         direction.applyQuaternion(groupRef.current.quaternion);
         groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED * 0.5));
         isCurrentlyMoving = true;
