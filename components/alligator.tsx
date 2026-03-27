@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { useGameStore } from "@/lib/game-store";
 
 const ALLIGATOR_SPEED = 0.015;
-const CATCH_DISTANCE = 2;
+const CATCH_DISTANCE = 0.8; // Reduced - alligator must be very close to catch
 
 interface AlligatorProps {
   initialPosition: THREE.Vector3;
@@ -160,9 +160,13 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
     newPositions[index] = groupRef.current.position.clone();
     setAlligatorPositions(newPositions);
 
-    // Check collision
-    const distance = groupRef.current.position.distanceTo(playerPosition);
+    // Check collision - only on XZ plane (ignore Y height differences)
+    const alligatorPos2D = new THREE.Vector2(groupRef.current.position.x, groupRef.current.position.z);
+    const playerPos2D = new THREE.Vector2(playerPosition.x, playerPosition.z);
+    const distance = alligatorPos2D.distanceTo(playerPos2D);
+    
     if (distance < CATCH_DISTANCE) {
+      console.log("[v0] Caught! Distance:", distance, "Threshold:", CATCH_DISTANCE);
       setGameOver(true);
     }
   });
