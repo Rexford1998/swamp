@@ -71,26 +71,35 @@ export function ShrekPlayer() {
     const isHoldingSpace = keys.has(" ") || isRevealing;
     
     if (!isHoldingSpace) {
-      // Rotation - left turns left, right turns right
-      if (keys.has("a") || keys.has("arrowleft")) {
-        groupRef.current.rotation.y -= ROTATION_SPEED;
-      }
-      if (keys.has("d") || keys.has("arrowright")) {
-        groupRef.current.rotation.y += ROTATION_SPEED;
-      }
-
-      // Movement - forward is negative Z in Three.js
+      // Movement direction based on camera view (not character rotation)
+      // W/Up = forward (negative Z), S/Down = backward (positive Z)
+      // A/Left = strafe left (negative X), D/Right = strafe right (positive X)
+      
       if (keys.has("w") || keys.has("arrowup")) {
-        const direction = new THREE.Vector3(0, 0, -1);
-        direction.applyQuaternion(groupRef.current.quaternion);
-        groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED));
+        groupRef.current.position.z -= MOVE_SPEED;
         isCurrentlyMoving = true;
       }
       if (keys.has("s") || keys.has("arrowdown")) {
-        const direction = new THREE.Vector3(0, 0, 1);
-        direction.applyQuaternion(groupRef.current.quaternion);
-        groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED * 0.5));
+        groupRef.current.position.z += MOVE_SPEED;
         isCurrentlyMoving = true;
+      }
+      if (keys.has("a") || keys.has("arrowleft")) {
+        groupRef.current.position.x -= MOVE_SPEED;
+        isCurrentlyMoving = true;
+      }
+      if (keys.has("d") || keys.has("arrowright")) {
+        groupRef.current.position.x += MOVE_SPEED;
+        isCurrentlyMoving = true;
+      }
+      
+      // Rotate character to face movement direction
+      if (isCurrentlyMoving) {
+        const moveX = (keys.has("d") || keys.has("arrowright") ? 1 : 0) - (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
+        const moveZ = (keys.has("s") || keys.has("arrowdown") ? 1 : 0) - (keys.has("w") || keys.has("arrowup") ? 1 : 0);
+        if (moveX !== 0 || moveZ !== 0) {
+          const targetAngle = Math.atan2(moveX, moveZ);
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, 0.15);
+        }
       }
     }
 

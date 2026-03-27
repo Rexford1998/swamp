@@ -4,23 +4,21 @@ import { useFrame, useThree } from "@react-three/fiber";
 import { useGameStore } from "@/lib/game-store";
 import * as THREE from "three";
 
-const CAMERA_HEIGHT = 12;
-const CAMERA_DISTANCE = 10;
-const LERP_FACTOR = 0.05;
+const CAMERA_HEIGHT = 18;
+const CAMERA_OFFSET_Z = 12;
+const LERP_FACTOR = 0.08;
 
 export function CameraController() {
   const { camera } = useThree();
-  const { playerPosition, playerRotation } = useGameStore();
+  const { playerPosition } = useGameStore();
 
   useFrame(() => {
-    // Calculate camera position behind player (player faces -Z, camera behind at +Z)
-    const offsetX = Math.sin(playerRotation) * CAMERA_DISTANCE;
-    const offsetZ = Math.cos(playerRotation) * CAMERA_DISTANCE;
-    
+    // Fixed camera angle - always behind and above player looking down
+    // This makes controls intuitive: up=forward, down=back, left=left, right=right
     const targetPosition = new THREE.Vector3(
-      playerPosition.x + offsetX,
+      playerPosition.x,
       CAMERA_HEIGHT,
-      playerPosition.z + offsetZ
+      playerPosition.z + CAMERA_OFFSET_Z
     );
 
     // Smoothly lerp camera position
@@ -29,7 +27,7 @@ export function CameraController() {
     // Look at player
     const lookTarget = new THREE.Vector3(
       playerPosition.x,
-      playerPosition.y + 2,
+      playerPosition.y + 1,
       playerPosition.z
     );
     camera.lookAt(lookTarget);
