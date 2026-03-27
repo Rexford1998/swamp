@@ -1,9 +1,9 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useRef, useState, useCallback } from "react";
+import { Suspense, useRef, useState, useEffect } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Preload } from "@react-three/drei";
+import { useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import { ShrekPlayer } from "./shrek-player";
 import { Alligator } from "./alligator";
@@ -12,6 +12,10 @@ import { CameraController } from "./camera-controller";
 import { LoadingScreen } from "./loading-screen";
 import { useGameStore } from "@/lib/game-store";
 
+// Preload models
+useGLTF.preload("/models/shrek.glb");
+useGLTF.preload("/models/alligator.glb");
+
 function RevealLight() {
   const lightRef = useRef<THREE.PointLight>(null);
   const spotRef = useRef<THREE.SpotLight>(null);
@@ -19,14 +23,12 @@ function RevealLight() {
 
   useFrame(() => {
     if (lightRef.current) {
-      // Smoothly transition light intensity
       const targetIntensity = isRevealing ? 50 : 0;
       lightRef.current.intensity = THREE.MathUtils.lerp(
         lightRef.current.intensity,
         targetIntensity,
         0.1
       );
-      // Follow player position
       lightRef.current.position.set(playerPosition.x, 15, playerPosition.z);
     }
     if (spotRef.current) {
@@ -68,18 +70,13 @@ function RevealLight() {
 function Lights() {
   return (
     <>
-      {/* Very dim ambient for oppressive atmosphere */}
       <ambientLight intensity={0.03} color="#1a3a1a" />
-      
-      {/* Distant eerie moonlight */}
       <directionalLight 
         position={[20, 30, 10]} 
         intensity={0.1} 
         color="#3a5a4a"
         castShadow
       />
-      
-      {/* Subtle fog glow from below */}
       <pointLight 
         position={[0, -2, 0]} 
         intensity={0.2} 
@@ -116,35 +113,33 @@ function Alligators() {
   );
 }
 
-function InnerLoadingBox() {
-  // Simple loading placeholder while models load inside Canvas
-  return (
-    <mesh position={[0, 1, 0]}>
-      <boxGeometry args={[1, 2, 1]} />
-      <meshStandardMaterial color="#556b2f" />
-    </mesh>
-  );
+// Component to signal when scene is ready
+function SceneReady({ onReady }: { onReady: () => void }) {
+  useEffect(() => {
+    // Signal ready after a short delay to ensure everything is rendered
+    const timer = setTimeout(() => {
+      console.log("[v0] Scene ready");
+      onReady();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [onReady]);
+  
+  return null;
 }
 
 export function GameScene() {
   const { gameStarted } = useGameStore();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  const handleLoaded = useCallback(() => {
-    setIsLoaded(true);
-  }, []);
-
   return (
     <div className="w-full h-screen relative">
-      {/* Loading overlay */}
-      <LoadingScreen onLoaded={handleLoaded} />
+      <LoadingScreen isLoaded={isLoaded} />
       
       <Canvas
         shadows
         camera={{ position: [0, 12, 10], fov: 60 }}
         gl={{ antialias: true }}
       >
-        {/* Dark fog for atmosphere */}
         <fog attach="fog" args={["#050805", 5, 45]} />
         <color attach="background" args={["#030503"]} />
         
@@ -152,11 +147,11 @@ export function GameScene() {
         <RevealLight />
         <CameraController />
         
-        <Suspense fallback={<InnerLoadingBox />}>
+        <Suspense fallback={null}>
           {gameStarted && <ShrekPlayer />}
           <Alligators />
           <SwampEnvironment />
-          <Preload all />
+          <SceneReady onReady={() => setIsLoaded(true)} />
         </Suspense>
       </Canvas>
     </div>

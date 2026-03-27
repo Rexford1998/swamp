@@ -1,22 +1,34 @@
 "use client";
 
-import { useProgress } from "@react-three/drei";
 import { useEffect, useState } from "react";
 
-export function LoadingScreen({ onLoaded }: { onLoaded: () => void }) {
-  const { progress, active } = useProgress();
+interface LoadingScreenProps {
+  isLoaded: boolean;
+}
+
+export function LoadingScreen({ isLoaded }: LoadingScreenProps) {
   const [showLoading, setShowLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (progress >= 100 && !active) {
-      // Add a small delay before hiding loading screen
+    // Simulate loading progress
+    if (!isLoaded) {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+      return () => clearInterval(interval);
+    } else {
+      // When loaded, quickly complete to 100%
+      setProgress(100);
       const timer = setTimeout(() => {
         setShowLoading(false);
-        onLoaded();
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [progress, active, onLoaded]);
+  }, [isLoaded]);
 
   if (!showLoading) return null;
 
@@ -29,12 +41,12 @@ export function LoadingScreen({ onLoaded }: { onLoaded: () => void }) {
             key={i}
             className="absolute rounded-full bg-[#2a4a2a]/30 animate-pulse"
             style={{
-              width: `${Math.random() * 40 + 10}px`,
-              height: `${Math.random() * 40 + 10}px`,
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 2}s`,
-              animationDuration: `${Math.random() * 3 + 2}s`,
+              width: `${20 + (i * 3)}px`,
+              height: `${20 + (i * 3)}px`,
+              left: `${(i * 7) % 100}%`,
+              top: `${(i * 11) % 100}%`,
+              animationDelay: `${i * 0.2}s`,
+              animationDuration: `${2 + (i % 3)}s`,
             }}
           />
         ))}
@@ -59,13 +71,13 @@ export function LoadingScreen({ onLoaded }: { onLoaded: () => void }) {
       <div className="w-64 md:w-80 h-4 bg-[#1a2a1a] rounded-full border border-[#3a5a3a]/50 overflow-hidden">
         <div
           className="h-full bg-gradient-to-r from-[#3a6a3a] to-[#5a9a5a] transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
+          style={{ width: `${Math.min(progress, 100)}%` }}
         />
       </div>
 
       {/* Progress text */}
       <p className="mt-4 text-[#6a9a6a] text-lg">
-        {Math.round(progress)}%
+        {Math.round(Math.min(progress, 100))}%
       </p>
 
       {/* Loading message */}
