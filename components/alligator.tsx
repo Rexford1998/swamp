@@ -18,7 +18,6 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/alligator.glb");
   const clonedScene = useMemo(() => {
-    console.log("[v0] Alligator model loaded:", index, scene);
     const clone = scene.clone();
     // Make sure all materials are set up for transparency
     clone.traverse((child) => {
@@ -83,9 +82,8 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
       setGameOver(true);
     }
 
-    // VISIBILITY: Only visible when spacebar is pressed (isRevealing is true)
-    // Fade in/out based on reveal state
-    const targetOpacity = isRevealing ? 1 : 0;
+    // VISIBILITY: Visible when spacebar pressed OR when game over (caught)
+    const targetOpacity = (isRevealing || gameOver) ? 1 : 0;
     
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
@@ -98,11 +96,11 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   return (
     <group ref={groupRef} position={initialPosition.toArray()}>
       <primitive object={clonedScene} scale={2} />
-      {/* Add a subtle glow when revealed */}
-      {isRevealing && (
+      {/* Add a subtle glow when revealed or game over */}
+      {(isRevealing || gameOver) && (
         <pointLight 
-          intensity={0.5} 
-          distance={3} 
+          intensity={1} 
+          distance={5} 
           color="#ff4444" 
           position={[0, 1, 0]} 
         />

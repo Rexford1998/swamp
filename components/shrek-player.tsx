@@ -12,10 +12,7 @@ const ROTATION_SPEED = 0.05;
 export function ShrekPlayer() {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/shrek.glb");
-  const clonedScene = useMemo(() => {
-    console.log("[v0] Shrek model loaded:", scene);
-    return scene.clone();
-  }, [scene]);
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
   const { actions } = useAnimations(animations, groupRef);
   
   const keysPressed = useRef<Set<string>>(new Set());
