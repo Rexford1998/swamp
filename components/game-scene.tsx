@@ -1,13 +1,15 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense, useRef } from "react";
+import { Suspense, useRef, useState, useCallback } from "react";
 import { useFrame } from "@react-three/fiber";
+import { Preload } from "@react-three/drei";
 import * as THREE from "three";
 import { ShrekPlayer } from "./shrek-player";
 import { Alligator } from "./alligator";
 import { SwampEnvironment } from "./swamp-environment";
 import { CameraController } from "./camera-controller";
+import { LoadingScreen } from "./loading-screen";
 import { useGameStore } from "@/lib/game-store";
 
 function RevealLight() {
@@ -114,9 +116,10 @@ function Alligators() {
   );
 }
 
-function LoadingFallback() {
+function InnerLoadingBox() {
+  // Simple loading placeholder while models load inside Canvas
   return (
-    <mesh>
+    <mesh position={[0, 1, 0]}>
       <boxGeometry args={[1, 2, 1]} />
       <meshStandardMaterial color="#556b2f" />
     </mesh>
@@ -125,9 +128,17 @@ function LoadingFallback() {
 
 export function GameScene() {
   const { gameStarted } = useGameStore();
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  const handleLoaded = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
 
   return (
-    <div className="w-full h-screen">
+    <div className="w-full h-screen relative">
+      {/* Loading overlay */}
+      <LoadingScreen onLoaded={handleLoaded} />
+      
       <Canvas
         shadows
         camera={{ position: [0, 12, 10], fov: 60 }}
@@ -141,10 +152,11 @@ export function GameScene() {
         <RevealLight />
         <CameraController />
         
-        <Suspense fallback={<LoadingFallback />}>
+        <Suspense fallback={<InnerLoadingBox />}>
           {gameStarted && <ShrekPlayer />}
           <Alligators />
           <SwampEnvironment />
+          <Preload all />
         </Suspense>
       </Canvas>
     </div>

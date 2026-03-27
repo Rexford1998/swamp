@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,6 +12,7 @@ const ROTATION_SPEED = 0.05;
 export function ShrekPlayer() {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/shrek.glb");
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
   const { actions } = useAnimations(animations, groupRef);
   
   const keysPressed = useRef<Set<string>>(new Set());
@@ -110,7 +111,7 @@ export function ShrekPlayer() {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      <primitive object={scene} scale={1.5} />
+      <primitive object={clonedScene} scale={1.5} />
       {/* Very dim light following Shrek - just enough to see where you are */}
       <pointLight intensity={0.5} distance={6} color="#3a5a3a" position={[0, 3, 0]} />
     </group>

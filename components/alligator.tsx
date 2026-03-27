@@ -17,7 +17,22 @@ interface AlligatorProps {
 export function Alligator({ initialPosition, index }: AlligatorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/alligator.glb");
-  const clonedScene = useMemo(() => scene.clone(), [scene]);
+  const clonedScene = useMemo(() => {
+    const clone = scene.clone();
+    // Make sure all materials are set up for transparency
+    clone.traverse((child) => {
+      if (child instanceof THREE.Mesh && child.material) {
+        // Clone material to avoid sharing between instances
+        child.material = (child.material as THREE.Material).clone();
+        const mat = child.material as THREE.MeshStandardMaterial;
+        mat.transparent = true;
+        mat.opacity = 0;
+        mat.needsUpdate = true;
+      }
+    });
+    return clone;
+  }, [scene]);
+  
   const { actions } = useAnimations(animations, groupRef);
   
   const { 
@@ -28,17 +43,6 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
     setGameOver,
     gameOver
   } = useGameStore();
-
-  // Initialize materials as transparent and invisible
-  useEffect(() => {
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh && child.material) {
-        const mat = child.material as THREE.MeshStandardMaterial;
-        mat.transparent = true;
-        mat.opacity = 0;
-      }
-    });
-  }, [clonedScene]);
 
   useEffect(() => {
     // Play walk animation
@@ -93,6 +97,15 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
   return (
     <group ref={groupRef} position={initialPosition.toArray()}>
       <primitive object={clonedScene} scale={2} />
+      {/* Add a subtle glow when revealed */}
+      {isRevealing && (
+        <pointLight 
+          intensity={0.5} 
+          distance={3} 
+          color="#ff4444" 
+          position={[0, 1, 0]} 
+        />
+      )}
     </group>
   );
 }
