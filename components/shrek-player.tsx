@@ -71,31 +71,31 @@ export function ShrekPlayer() {
     const isHoldingSpace = keys.has(" ") || isRevealing;
     
     if (!isHoldingSpace) {
-      // Movement direction based on camera view (not character rotation)
-      // W/Up = forward (negative Z), S/Down = backward (positive Z)
-      // A/Left = strafe left (negative X), D/Right = strafe right (positive X)
+      // Movement direction based on camera view
+      // W/Up = move up on screen, S/Down = move down on screen
+      // A/Left = move left on screen, D/Right = move right on screen
       
       if (keys.has("w") || keys.has("arrowup")) {
-        groupRef.current.position.z -= MOVE_SPEED;
-        isCurrentlyMoving = true;
-      }
-      if (keys.has("s") || keys.has("arrowdown")) {
         groupRef.current.position.z += MOVE_SPEED;
         isCurrentlyMoving = true;
       }
+      if (keys.has("s") || keys.has("arrowdown")) {
+        groupRef.current.position.z -= MOVE_SPEED;
+        isCurrentlyMoving = true;
+      }
       if (keys.has("a") || keys.has("arrowleft")) {
-        groupRef.current.position.x -= MOVE_SPEED;
+        groupRef.current.position.x += MOVE_SPEED;
         isCurrentlyMoving = true;
       }
       if (keys.has("d") || keys.has("arrowright")) {
-        groupRef.current.position.x += MOVE_SPEED;
+        groupRef.current.position.x -= MOVE_SPEED;
         isCurrentlyMoving = true;
       }
       
       // Rotate character to face movement direction
       if (isCurrentlyMoving) {
-        const moveX = (keys.has("d") || keys.has("arrowright") ? 1 : 0) - (keys.has("a") || keys.has("arrowleft") ? 1 : 0);
-        const moveZ = (keys.has("s") || keys.has("arrowdown") ? 1 : 0) - (keys.has("w") || keys.has("arrowup") ? 1 : 0);
+        const moveX = (keys.has("a") || keys.has("arrowleft") ? 1 : 0) - (keys.has("d") || keys.has("arrowright") ? 1 : 0);
+        const moveZ = (keys.has("w") || keys.has("arrowup") ? 1 : 0) - (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
         if (moveX !== 0 || moveZ !== 0) {
           const targetAngle = Math.atan2(moveX, moveZ);
           groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, 0.15);
