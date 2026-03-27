@@ -43,17 +43,17 @@ function Lights() {
 }
 
 function Collectibles() {
-  const { collectiblePositions, gameOver, gameWon } = useGameStore();
+  const { collectibles, gameOver, gameWon } = useGameStore();
   
   if (gameOver || gameWon) return null;
   
   return (
     <>
-      {collectiblePositions.map((pos, index) => (
+      {collectibles.map((collectible, index) => (
         <Collectible 
-          key={`collectible-${index}-${pos.x.toFixed(2)}`}
-          position={pos}
-          index={index}
+          key={collectible.id}
+          collectible={collectible}
+          animationOffset={index}
         />
       ))}
     </>

@@ -3,7 +3,7 @@
 import { useGameStore } from "@/lib/game-store";
 
 function MiniMap() {
-  const { playerPosition, playerRotation, alligatorPositions, collectiblePositions, isRevealing, isMoving } = useGameStore();
+  const { playerPosition, playerRotation, alligatorPositions, collectibles, isRevealing, isMoving } = useGameStore();
   const canSeeAlligators = isRevealing && !isMoving;
   
   // Map scale: 60 units game space = 150px map space
@@ -22,12 +22,12 @@ function MiniMap() {
     <div className="absolute top-4 right-4 w-[150px] h-[150px] bg-background/80 border-2 border-accent/50 rounded-lg overflow-hidden">
       <div className="absolute inset-0 bg-[#1a3a2a]/80" />
       
-      {/* Collectibles on map */}
-      {collectiblePositions.map((pos, i) => {
-        const mapPos = toMapCoords(pos.x, pos.z);
+      {/* Collectibles on map - only show uncollected ones */}
+      {collectibles.filter(c => !c.collected).map((collectible) => {
+        const mapPos = toMapCoords(collectible.position.x, collectible.position.z);
         return (
           <div
-            key={`map-collect-${i}`}
+            key={collectible.id}
             className="absolute w-2 h-2 bg-emerald-400 rounded-full animate-pulse"
             style={{
               left: mapPos.x - 4,

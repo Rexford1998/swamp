@@ -3,25 +3,26 @@
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 import * as THREE from "three";
-import { useGameStore } from "@/lib/game-store";
+import { useGameStore, CollectibleData } from "@/lib/game-store";
 
 const COLLECT_DISTANCE = 2;
 
 interface CollectibleProps {
-  position: THREE.Vector3;
-  index: number;
+  collectible: CollectibleData;
+  animationOffset: number;
 }
 
-export function Collectible({ position, index }: CollectibleProps) {
+export function Collectible({ collectible, animationOffset }: CollectibleProps) {
   const meshRef = useRef<THREE.Mesh>(null);
   const glowRef = useRef<THREE.PointLight>(null);
   const { playerPosition, collectItem, gameOver, gameWon } = useGameStore();
+  const collectedRef = useRef(false);
 
   useFrame(({ clock }) => {
-    if (!meshRef.current || gameOver || gameWon) return;
+    if (!meshRef.current || gameOver || gameWon || collectedRef.current) return;
 
     // Floating animation
-    meshRef.current.position.y = position.y + Math.sin(clock.elapsedTime * 2 + index) * 0.3;
+    meshRef.current.position.y = collectible.position.y + Math.sin(clock.elapsedTime * 2 + animationOffset) * 0.3;
     
     // Rotation animation
     meshRef.current.rotation.y = clock.elapsedTime * 2;
@@ -32,15 +33,24 @@ export function Collectible({ position, index }: CollectibleProps) {
       glowRef.current.intensity = 1.5 + Math.sin(clock.elapsedTime * 3) * 0.5;
     }
 
-    // Check collection
-    const distance = meshRef.current.position.distanceTo(playerPosition);
-    if (distance < COLLECT_DISTANCE) {
-      collectItem(index);
+    // Check collection - use local ref to prevent multiple calls
+    const distance = new THREE.Vector3(
+      collectible.position.x,
+      meshRef.current.position.y,
+      collectible.position.z
+    ).distanceTo(playerPosition);
+    
+    if (distance < COLLECT_DISTANCE && !collectedRef.current) {
+      collectedRef.current = true;
+      collectItem(collectible.id);
     }
   });
 
+  // Don't render if already collected
+  if (collectible.collected) return null;
+
   return (
-    <group position={[position.x, position.y, position.z]}>
+    <group position={[collectible.position.x, collectible.position.y, collectible.position.z]}>
       <mesh ref={meshRef}>
         {/* Crystal/gem shape */}
         <octahedronGeometry args={[0.4, 0]} />
