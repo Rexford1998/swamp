@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
@@ -12,6 +12,7 @@ const ROTATION_SPEED = 0.05;
 export function ShrekPlayer() {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/shrek.glb");
+  const clonedScene = useMemo(() => scene.clone(), [scene]);
   const { actions } = useAnimations(animations, groupRef);
   
   const keysPressed = useRef<Set<string>>(new Set());
@@ -20,7 +21,9 @@ export function ShrekPlayer() {
     setPlayerRotation, 
     setIsMoving, 
     setIsRevealing,
-    gameOver 
+    isRevealing,
+    gameOver,
+    gameStarted
   } = useGameStore();
 
   useEffect(() => {
@@ -32,9 +35,12 @@ export function ShrekPlayer() {
   }, [actions]);
 
   useEffect(() => {
+    if (!gameStarted) return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       keysPressed.current.add(e.key.toLowerCase());
       if (e.key === " ") {
+        e.preventDefault();
         setIsRevealing(true);
       }
     };
@@ -53,7 +59,7 @@ export function ShrekPlayer() {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [setIsRevealing]);
+  }, [setIsRevealing, gameStarted]);
 
   useFrame(() => {
     if (!groupRef.current || gameOver) return;
@@ -61,30 +67,39 @@ export function ShrekPlayer() {
     const keys = keysPressed.current;
     let isCurrentlyMoving = false;
     
-    // Don't move if revealing (holding space)
-    const isHoldingSpace = keys.has(" ");
+    // IMPORTANT: Cannot move AT ALL while holding space (revealing)
+    const isHoldingSpace = keys.has(" ") || isRevealing;
     
     if (!isHoldingSpace) {
-      // Rotation
-      if (keys.has("a") || keys.has("arrowleft")) {
-        groupRef.current.rotation.y += ROTATION_SPEED;
-      }
-      if (keys.has("d") || keys.has("arrowright")) {
-        groupRef.current.rotation.y -= ROTATION_SPEED;
-      }
-
-      // Movement
+      // Movement direction based on camera view
+      // W/Up = move up on screen, S/Down = move down on screen
+      // A/Left = move left on screen, D/Right = move right on screen
+      
       if (keys.has("w") || keys.has("arrowup")) {
-        const direction = new THREE.Vector3(0, 0, 1);
-        direction.applyQuaternion(groupRef.current.quaternion);
-        groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED));
+        groupRef.current.position.z += MOVE_SPEED;
         isCurrentlyMoving = true;
       }
       if (keys.has("s") || keys.has("arrowdown")) {
-        const direction = new THREE.Vector3(0, 0, -1);
-        direction.applyQuaternion(groupRef.current.quaternion);
-        groupRef.current.position.add(direction.multiplyScalar(MOVE_SPEED * 0.5));
+        groupRef.current.position.z -= MOVE_SPEED;
         isCurrentlyMoving = true;
+      }
+      if (keys.has("a") || keys.has("arrowleft")) {
+        groupRef.current.position.x += MOVE_SPEED;
+        isCurrentlyMoving = true;
+      }
+      if (keys.has("d") || keys.has("arrowright")) {
+        groupRef.current.position.x -= MOVE_SPEED;
+        isCurrentlyMoving = true;
+      }
+      
+      // Rotate character to face movement direction
+      if (isCurrentlyMoving) {
+        const moveX = (keys.has("a") || keys.has("arrowleft") ? 1 : 0) - (keys.has("d") || keys.has("arrowright") ? 1 : 0);
+        const moveZ = (keys.has("w") || keys.has("arrowup") ? 1 : 0) - (keys.has("s") || keys.has("arrowdown") ? 1 : 0);
+        if (moveX !== 0 || moveZ !== 0) {
+          const targetAngle = Math.atan2(moveX, moveZ);
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetAngle, 0.15);
+        }
       }
     }
 
@@ -105,9 +120,9 @@ export function ShrekPlayer() {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      <primitive object={scene} scale={1.5} />
-      {/* Point light following Shrek for visibility */}
-      <pointLight intensity={2} distance={8} color="#556b2f" position={[0, 3, 0]} />
+      <primitive object={clonedScene} scale={1.5} />
+      {/* Very dim light following Shrek - just enough to see where you are */}
+      <pointLight intensity={0.5} distance={6} color="#3a5a3a" position={[0, 3, 0]} />
     </group>
   );
 }

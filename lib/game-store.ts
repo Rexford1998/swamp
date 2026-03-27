@@ -2,6 +2,7 @@ import { create } from "zustand";
 import * as THREE from "three";
 
 interface GameState {
+  gameStarted: boolean;
   playerPosition: THREE.Vector3;
   playerRotation: number;
   isMoving: boolean;
@@ -9,6 +10,7 @@ interface GameState {
   alligatorPositions: THREE.Vector3[];
   gameOver: boolean;
   
+  startGame: () => void;
   setPlayerPosition: (position: THREE.Vector3) => void;
   setPlayerRotation: (rotation: number) => void;
   setIsMoving: (moving: boolean) => void;
@@ -27,6 +29,7 @@ const initialAlligatorPositions = [
 ];
 
 export const useGameStore = create<GameState>((set) => ({
+  gameStarted: false,
   playerPosition: new THREE.Vector3(0, 0, 0),
   playerRotation: 0,
   isMoving: false,
@@ -34,6 +37,7 @@ export const useGameStore = create<GameState>((set) => ({
   alligatorPositions: initialAlligatorPositions.map(p => p.clone()),
   gameOver: false,
   
+  startGame: () => set({ gameStarted: true }),
   setPlayerPosition: (position) => set({ playerPosition: position }),
   setPlayerRotation: (rotation) => set({ playerRotation: rotation }),
   setIsMoving: (moving) => set({ isMoving: moving }),
@@ -41,6 +45,7 @@ export const useGameStore = create<GameState>((set) => ({
   setAlligatorPositions: (positions) => set({ alligatorPositions: positions }),
   setGameOver: (over) => set({ gameOver: over }),
   resetGame: () => set({
+    gameStarted: true,
     playerPosition: new THREE.Vector3(0, 0, 0),
     playerRotation: 0,
     isMoving: false,
