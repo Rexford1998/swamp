@@ -32,14 +32,14 @@ export function ShrekPlayer() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      keysPressed.current.add(e.key.toLowerCase());
+      keysPressed.current.add(e.key);
       if (e.key === " ") {
         setIsRevealing(true);
       }
     };
     
     const handleKeyUp = (e: KeyboardEvent) => {
-      keysPressed.current.delete(e.key.toLowerCase());
+      keysPressed.current.delete(e.key);
       if (e.key === " ") {
         setIsRevealing(false);
       }
@@ -66,16 +66,16 @@ export function ShrekPlayer() {
     // Direct WASD movement (not tank controls)
     const moveDirection = new THREE.Vector3(0, 0, 0);
     
-    if (keys.has("w") || keys.has("arrowup")) {
+    if (keys.has("w") || keys.has("W") || keys.has("arrowup") || keys.has("ArrowUp")) {
       moveDirection.z -= 1; // Move forward (negative Z)
     }
-    if (keys.has("s") || keys.has("arrowdown")) {
+    if (keys.has("s") || keys.has("S") || keys.has("arrowdown") || keys.has("ArrowDown")) {
       moveDirection.z += 1; // Move backward (positive Z)
     }
-    if (keys.has("a") || keys.has("arrowleft")) {
+    if (keys.has("a") || keys.has("A") || keys.has("arrowleft") || keys.has("ArrowLeft")) {
       moveDirection.x -= 1; // Move left (negative X)
     }
-    if (keys.has("d") || keys.has("arrowright")) {
+    if (keys.has("d") || keys.has("D") || keys.has("arrowright") || keys.has("ArrowRight")) {
       moveDirection.x += 1; // Move right (positive X)
     }
     
@@ -85,8 +85,8 @@ export function ShrekPlayer() {
       groupRef.current.position.add(moveDirection);
       isCurrentlyMoving = true;
       
-      // Rotate Shrek to face movement direction
-      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z);
+      // Rotate Shrek to face movement direction (add PI so character faces forward)
+      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z) + Math.PI;
       groupRef.current.rotation.y = targetRotation;
     }
 
@@ -107,8 +107,8 @@ export function ShrekPlayer() {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* Fixed scale and rotated 180 degrees so character faces movement direction */}
-      <primitive object={scene} scale={[1.5, 1.5, 1.5]} rotation={[0, Math.PI, 0]} />
+      {/* Fixed scale - rotation handled dynamically in useFrame */}
+      <primitive object={scene} scale={[1.5, 1.5, 1.5]} />
       {/* Point light following Shrek for visibility */}
       <pointLight intensity={3} distance={12} color="#7a9f5a" position={[0, 3, 0]} />
     </group>
