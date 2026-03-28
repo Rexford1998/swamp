@@ -6,7 +6,7 @@ import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameStore } from "@/lib/game-store";
 
-const MOVE_SPEED = 1.5;
+const MOVE_SPEED = 15;
 
 export function ShrekPlayer() {
   const groupRef = useRef<THREE.Group>(null);
@@ -85,8 +85,8 @@ export function ShrekPlayer() {
       groupRef.current.position.add(moveDirection);
       isCurrentlyMoving = true;
       
-      // Rotate Shrek to face movement direction (add PI to flip 180 degrees)
-      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z) + Math.PI;
+      // Rotate Shrek to face movement direction
+      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z);
       groupRef.current.rotation.y = targetRotation;
     }
 
@@ -107,8 +107,8 @@ export function ShrekPlayer() {
 
   return (
     <group ref={groupRef} position={[0, 0, 0]}>
-      {/* Fixed scale to prevent squishing - uniform scale on all axes */}
-      <primitive object={scene} scale={[1.5, 1.5, 1.5]} />
+      {/* Fixed scale and rotated 180 degrees so character faces movement direction */}
+      <primitive object={scene} scale={[1.5, 1.5, 1.5]} rotation={[0, Math.PI, 0]} />
       {/* Point light following Shrek for visibility */}
       <pointLight intensity={3} distance={12} color="#7a9f5a" position={[0, 3, 0]} />
     </group>
