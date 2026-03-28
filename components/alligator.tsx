@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameStore } from "@/lib/game-store";
+import { SkeletonUtils } from "three-stdlib";
 
-const ALLIGATOR_SPEED = 0.015;
+const ALLIGATOR_SPEED = 0.01;
 const CATCH_DISTANCE = 2;
 
 interface AlligatorProps {
@@ -17,7 +18,7 @@ interface AlligatorProps {
 export function Alligator({ initialPosition, index }: AlligatorProps) {
   const groupRef = useRef<THREE.Group>(null);
   const { scene, animations } = useGLTF("/models/alligator.glb");
-  const clonedScene = scene.clone();
+  const clonedScene = useMemo(() => SkeletonUtils.clone(scene), [scene]);
   const { actions } = useAnimations(animations, groupRef);
   
   const { 
@@ -72,7 +73,8 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
     const shouldBeVisible = isRevealing && !isMoving;
     
     // Fade effect for visibility
-    clonedScene.traverse((child) => {
+    groupRef.current.visible = true;
+    groupRef.current.traverse((child) => {
       if (child instanceof THREE.Mesh && child.material) {
         const mat = child.material as THREE.MeshStandardMaterial;
         if (!mat.transparent) {
@@ -89,7 +91,7 @@ export function Alligator({ initialPosition, index }: AlligatorProps) {
 
   return (
     <group ref={groupRef} position={initialPosition.toArray()}>
-      <primitive object={clonedScene} scale={2} />
+      <primitive object={clonedScene} scale={1.5} />
     </group>
   );
 }

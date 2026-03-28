@@ -6,8 +6,7 @@ import { useGLTF, useAnimations } from "@react-three/drei";
 import * as THREE from "three";
 import { useGameStore } from "@/lib/game-store";
 
-const MOVE_SPEED = 0.08;
-const ROTATION_SPEED = 0.05;
+const MOVE_SPEED = 0.15;
 
 export function ShrekPlayer() {
   const groupRef = useRef<THREE.Group>(null);
@@ -64,33 +63,31 @@ export function ShrekPlayer() {
     // Don't move if revealing (holding space)
     const isHoldingSpace = keys.has(" ");
     
-    if (!isHoldingSpace) {
-      // Direct WASD movement (not tank controls)
-      const moveDirection = new THREE.Vector3(0, 0, 0);
+    // Direct WASD movement (not tank controls)
+    const moveDirection = new THREE.Vector3(0, 0, 0);
+    
+    if (keys.has("w") || keys.has("arrowup")) {
+      moveDirection.z -= 1; // Move forward (negative Z)
+    }
+    if (keys.has("s") || keys.has("arrowdown")) {
+      moveDirection.z += 1; // Move backward (positive Z)
+    }
+    if (keys.has("a") || keys.has("arrowleft")) {
+      moveDirection.x -= 1; // Move left (negative X)
+    }
+    if (keys.has("d") || keys.has("arrowright")) {
+      moveDirection.x += 1; // Move right (positive X)
+    }
+    
+    // Apply movement if there's any input and not holding space
+    if (moveDirection.length() > 0 && !isHoldingSpace) {
+      moveDirection.normalize().multiplyScalar(MOVE_SPEED);
+      groupRef.current.position.add(moveDirection);
+      isCurrentlyMoving = true;
       
-      if (keys.has("w") || keys.has("arrowup")) {
-        moveDirection.z -= 1; // Move forward (negative Z)
-      }
-      if (keys.has("s") || keys.has("arrowdown")) {
-        moveDirection.z += 1; // Move backward (positive Z)
-      }
-      if (keys.has("a") || keys.has("arrowleft")) {
-        moveDirection.x -= 1; // Move left (negative X)
-      }
-      if (keys.has("d") || keys.has("arrowright")) {
-        moveDirection.x += 1; // Move right (positive X)
-      }
-      
-      // Apply movement if there's any input
-      if (moveDirection.length() > 0) {
-        moveDirection.normalize().multiplyScalar(MOVE_SPEED);
-        groupRef.current.position.add(moveDirection);
-        isCurrentlyMoving = true;
-        
-        // Rotate Shrek to face movement direction
-        const targetRotation = Math.atan2(moveDirection.x, moveDirection.z);
-        groupRef.current.rotation.y = targetRotation;
-      }
+      // Rotate Shrek to face movement direction
+      const targetRotation = Math.atan2(moveDirection.x, moveDirection.z);
+      groupRef.current.rotation.y = targetRotation;
     }
 
     // Clamp position to swamp boundaries
