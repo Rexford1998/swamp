@@ -54,7 +54,7 @@ export function ShrekPlayer() {
     };
   }, [setIsRevealing]);
 
-  useFrame(() => {
+  useFrame((_, delta) => {
     if (!groupRef.current || gameOver) return;
 
     const keys = keysPressed.current;
@@ -66,28 +66,38 @@ export function ShrekPlayer() {
     // Direct WASD movement (not tank controls)
     const moveDirection = new THREE.Vector3(0, 0, 0);
     
-    if (keys.has("w") || keys.has("W") || keys.has("arrowup") || keys.has("ArrowUp")) {
-      moveDirection.z -= 1; // Move forward (negative Z)
+    if (keys.has("w") || keys.has("W") || keys.has("ArrowUp")) {
+      moveDirection.z -= 1;
     }
-    if (keys.has("s") || keys.has("S") || keys.has("arrowdown") || keys.has("ArrowDown")) {
-      moveDirection.z += 1; // Move backward (positive Z)
+    if (keys.has("s") || keys.has("S") || keys.has("ArrowDown")) {
+      moveDirection.z += 1;
     }
-    if (keys.has("a") || keys.has("A") || keys.has("arrowleft") || keys.has("ArrowLeft")) {
-      moveDirection.x -= 1; // Move left (negative X)
+    if (keys.has("a") || keys.has("A") || keys.has("ArrowLeft")) {
+      moveDirection.x -= 1;
     }
-    if (keys.has("d") || keys.has("D") || keys.has("arrowright") || keys.has("ArrowRight")) {
-      moveDirection.x += 1; // Move right (positive X)
+    if (keys.has("d") || keys.has("D") || keys.has("ArrowRight")) {
+      moveDirection.x += 1;
+    }
+    
+    // Debug log
+    if (keys.size > 0) {
+      console.log("[v0] Keys pressed:", Array.from(keys), "moveDirection:", moveDirection.toArray());
     }
     
     // Apply movement if there's any input and not holding space
     if (moveDirection.length() > 0 && !isHoldingSpace) {
-      moveDirection.normalize().multiplyScalar(MOVE_SPEED);
-      groupRef.current.position.add(moveDirection);
+      // Use delta time for frame-rate independent movement
+      const speed = MOVE_SPEED * delta * 60;
+      moveDirection.normalize().multiplyScalar(speed);
+      groupRef.current.position.x += moveDirection.x;
+      groupRef.current.position.z += moveDirection.z;
       isCurrentlyMoving = true;
       
       // Rotate Shrek to face movement direction (add PI so character faces forward)
       const targetRotation = Math.atan2(moveDirection.x, moveDirection.z) + Math.PI;
       groupRef.current.rotation.y = targetRotation;
+      
+      console.log("[v0] Player position:", groupRef.current.position.toArray());
     }
 
     // Clamp position to swamp boundaries

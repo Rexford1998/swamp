@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
-import { Suspense } from "react";
+import { Suspense, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { ShrekPlayer } from "./shrek-player";
 import { Alligator } from "./alligator";
@@ -96,8 +96,20 @@ function LoadingFallback() {
 }
 
 export function GameScene() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    // Auto-focus the container so keyboard events work
+    containerRef.current?.focus();
+  }, []);
+  
   return (
-    <div className="w-full h-screen">
+    <div 
+      ref={containerRef}
+      className="w-full h-screen" 
+      tabIndex={0} 
+      style={{ outline: 'none' }}
+    >
       <Canvas
         shadows
         camera={{ position: [0, 12, 10], fov: 60 }}
